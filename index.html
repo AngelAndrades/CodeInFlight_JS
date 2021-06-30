@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>CODE.JSON</title>
+
+    <link href="https://kendo.cdn.telerik.com/2020.1.219/styles/kendo.common-material.min.css" rel="stylesheet" />
+    <link href="https://kendo.cdn.telerik.com/2020.1.219/styles/kendo.material.min.css" rel="stylesheet" />
+    <link href="https://kendo.cdn.telerik.com/2020.1.219/styles/kendo.material.mobile.min.css" rel="stylesheet" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+    <script src="https://kendo.cdn.telerik.com/2020.1.219/js/kendo.all.min.js"></script>
+
+    <style>
+        #s4-titlerow, #pageContentTitle, #titlerow {
+            display: none !important;
+        }
+
+        .contentwrapper {
+            margin: 0 !important;
+        }
+
+        .ms-pub-contentLayout {
+            padding: 0 !important;
+            margin-top: 0 !important;
+        }
+
+        .article-content {
+            margin: 0 !important;
+        }
+
+        .ms-core-listMenu-horizontalBox {
+            display: none !important;
+        }
+
+        div.article {
+            padding: 0px;
+        }
+
+        html, body {
+            height: 100% !important;
+            min-height: 100%;
+        }
+
+        .fill {
+            min-height: 100%;
+            height: 80vh;
+        }
+
+        .nav-item {
+            line-height: 500%;
+        }
+
+        h1 {
+            line-height: 200%
+        }
+
+        .nav-area {
+            background-color: #35373d;
+        }
+
+        .nav-area > ul > li {
+            color: #b8bbc2;
+            border-bottom: 1px solid #4a4b51;
+        }
+
+        .nav-area > ul > li:hover {
+            background-color: #212329;
+        }
+
+        .active {
+            background-color: #0d1016;
+        }
+
+        .k-edit-form-container {
+            width: 600px;
+        }
+
+        .k-edit-label {
+            width: 30%;
+            margin: 0;
+        }
+
+        .k-input, .k-combobox, .k-dropdown, .k-numerictextbox, .k-textbox {
+            width: 85% !important
+        }
+
+        .k-grid .k-grid-header .k-header .k-link { height: auto; }
+
+        .k-grid .k-grid-header .k-header { white-space: normal; }
+
+        .k-grid .k-header .k-grid-search { max-width: 20% !important }
+
+        .k-toolbar>* {
+            min-width: 10vw;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="message"></div>
+    
+    <div id="kendoContent" style="width: 90vw; margin: auto;">
+        <div id="epsSearch"></div> 
+    </div>
+
+    <script>
+        (function (vaApp, $, undefined) {
+            $.model = new kendo.observable({
+                // set the default digest value - required for post operations
+                digest: $('#__REQUESTDIGEST').val(),
+
+                // relative url
+                _siteUrl: _spPageContextInfo.webServerRelativeUrl,
+            });
+
+            $.init = () => {
+            }
+
+            $.render = () => {
+                $.ajax({
+                    url: 'https://vaww.vip.cdw.va.gov/_vti_bin/vip/vip.searchservice.svc/json/eps/search',
+                    method: 'POST',
+                    dataType: 'JSONP',
+                    data: JSON.parse('{"RowsPerPage":10,"PageNumber":1,"SortColumn":"EPSId","SortOrder":"ASC","Filters":[{"Field":"FY","Value":"2020"}]}')
+                })
+                .done((data) => {
+                    console.log(data);
+                })
+                .fail((data) => {
+                    console.log(data);
+                })
+
+                /*$('#message').kendoWindow({
+                    modal: true,
+                    width: '70vw',
+                    height: '70vh',
+                    title: 'Test',
+                    content: 'https://vaww.vip.cdw.va.gov/SitePages/epslist.aspx',
+                    iframe: true,
+                    close: (e) => {
+                        let item = $('iframe').find('#EPSRecordsDiv').data('kendoGrid');
+                        console.log('testing: ', item);
+                    }
+                });
+                $('#message').data('kendoWindow').center();*/
+
+                //var item = $('#EPSCode').data('kendoGrid').select();
+                //var dataItem = $('#EPSRecordsDiv').data('kendoGrid').dataItem(item);
+                //var eps = dataItem.EPSCode;
+                //var name = dataItem.Name;
+            }
+
+            // internal Ajax CRUD functions
+            Lib = {
+                readData: function (callback,url) {
+                    $.ajax({
+                        url: url,
+                        dataType: 'json',
+                        type: 'GET',
+                        async: true,
+                        headers: {
+                            'Accept': 'application/json;odata=nometadata',
+                            'Content-Type': 'application/json;odata=nometadata'
+                        },
+                        success: function (data) {
+                            callback(data.value);
+                        },
+                        error: function (xhr) {
+                            callback(xhr);
+                        }
+                    })
+                },
+                createData: function (callback, args, url) {
+                    Utils.getDigest();
+                    delete args.data['Id'];
+                    $.ajax({
+                        url: url,
+                        method: 'POST',
+                        data: JSON.stringify(Utils.cleanseModel(args.data)),
+                        headers: {
+                            'Accept': 'application/json;odata=nometadata',
+                            'Content-Type': 'application/json;odata=nometadata',
+                            'X-RequestDigest': vaApp.model.digest,
+                            'X-HTTP-Method': 'POST'
+                        },
+                        success: function (data, status, xhr) {
+                            callback(data);
+                        },
+                        error: function (xhr, status, error) {
+                            console.log(xhr, status, error);
+                            args.error({});
+                        }
+                    });
+                },
+                updateData: function (args, url) {
+                    Utils.getDigest();
+                    $.ajax({
+                        url: url + '(' + args.data.Id + ')',
+                        method: 'PATCH',
+                        data: JSON.stringify(Utils.cleanseModel(args.data)),
+                        headers: {
+                            'Accept': 'application/json;odata=nometadata',
+                            'Content-Type': 'application/json;odata=nometadata',
+                            'X-RequestDigest': vaApp.model.digest,
+                            'IF-MATCH': '*',
+                            'X-HTTP-Method': 'PATCH'
+                        },
+                        success: function (data, status, xhr) {
+                            args.success({});
+                        },
+                        error: function (xhr, status, error) {
+                            console.log(xhr, status, error);
+                            args.error({});
+                        }
+                    });
+                },
+                deleteData: function (args, url) {
+                    Utils.getDigest();
+                    $.ajax({  
+                        url: url + '(' + args.data.Id + ')',
+                        method: "POST",  
+                        headers: {  
+                            'Accept': 'application/json;odata=nometadata',
+                            'Content-Type': 'application/json;odata=nometadata',
+                            'X-RequestDigest': vaApp.model.digest,
+                            'IF-MATCH': '*',
+                            'X-HTTP-Method': 'DELETE'
+                        },  
+                        success: function (data, status, xhr) {
+                            args.success({});
+                        },
+                        error: function (xhr, status, error) {
+                            console.log(xhr, status, error);
+                            args.error({});
+                        }
+                    });
+                }
+            }
+
+            // internal utility functions
+            Utils = {
+                showMessage: (title, message) => {
+                    var displayMessage = $('#_message').data('kendoWindow');
+                    displayMessage.title(title);
+                    displayMessage.content(message);
+                    displayMessage.open();
+                },
+                getDigest: () => {
+                    $.ajax({
+                        url:  vaApp.model._siteUrl + '/_api/contextinfo',
+                        dataType: 'json',
+                        type: 'POST',
+                        async: true,
+                        headers: {
+                            'Accept': 'application/json;odata=verbose',
+                            'Content-Type': 'application/json;odata=verbose'
+                        },
+                        success: function (response) {
+                            vaApp.model.set('digest', response.d.GetContextWebInformation.FormDigestValue);
+                        },
+                        error: function (xhr) {
+                            Utils.showMessage('Error: Digest Request Failure','There was a communication error with SharePoint obtaining the request digest needed for POST operations. See the console log for more details...');
+                            console.log(xhr);
+                        }
+                    });
+                },
+                cleanseModel: (model) => {
+                    delete model['__kendo_devtools_id'];
+                    delete model['__metadata'];
+                    delete model['Created'];
+                    delete model['Modified'];
+                    delete model['metadataLastUpdated'];
+                    delete model['Editor'];
+                    delete model['value'];
+                    model['Title'] = model['Title'].toString();
+                    console.log(model);
+                    return model;
+                }
+            }
+        } (window.vaApp = window.vaApp = window.$ || {}, jQuery));
+
+        // when document ready
+        $( () => {
+            $.render();
+        });
+    </script>    
+
+</body>
+</html>
+
+
+
+https://vaww.vip.cdw.va.gov/_vti_bin/vip/vip.searchservice.svc/json/eps/search
+{"RowsPerPage":10,"PageNumber":1,"SortColumn":"EPSId","SortOrder":"ASC","Filters":[{"Field":"FY","Value":"2020"}]}
